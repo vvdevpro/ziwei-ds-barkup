@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 # 部署到 ss 服务器：本机构建 standalone → 打包 → 上传 → 重启 systemd 服务
-# 用法：./deploy/deploy.sh            （默认 36.137.204.109）
-#      SERVER=1.2.3.4 ./deploy/deploy.sh
+# 用法：SERVER=1.2.3.4 SSH_KEY=~/.ssh/id_ed25519 ./deploy/deploy.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SERVER="${SERVER:-36.137.204.109}"
-SSH_KEY="${SSH_KEY:-$HOME/.ssh/ss_key.pem}"
+SERVER="${SERVER:?请用 SERVER=你的服务器IP 指定}"
+SSH_KEY="${SSH_KEY:-$HOME/.ssh/id_ed25519}"
 SITE_URL="${SITE_URL:-http://${SERVER}:3000}"
 SSH="ssh -F /dev/null -i ${SSH_KEY}"
 SCP="scp -F /dev/null -i ${SSH_KEY}"
