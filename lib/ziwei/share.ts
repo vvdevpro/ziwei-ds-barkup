@@ -1,6 +1,7 @@
 import type { BirthFormState } from '@/components/BirthForm';
 import type { BirthInfo } from './types';
 import { branchFromSolarMinutes, resolveZiweiDayOffset, shiftGregorianDate } from './true-solar-time';
+import { lunarToSolar } from './lunar-solar';
 
 /** 根据北京时间 + 经度计算真太阳时时辰支 (0-11) */
 export function calcTrueSolarBranch(clockHour: number, clockMinute: number, longitude: number): number {
@@ -23,6 +24,13 @@ export function formToBirthInfo(form: BirthFormState): BirthInfo {
   let m = parseInt(form.month) || 0;
   let d = parseInt(form.day) || 0;
   let hour = 0;
+
+  // 用户按农历填的生日：先换成公历，再走后面的晚子时换日。顺序不能反——
+  // 换日规则是作用在「排盘日（公历）」上的，先换日再转农历会错一天。
+  if (form.calendar === 'lunar' && y > 0 && m > 0 && d > 0) {
+    const solar = lunarToSolar(y, m, d, !!form.isLeapMonth);
+    if (solar) ({ year: y, month: m, day: d } = solar);
+  }
 
   // 晚子时换日按真太阳时判定，与时辰支同一口径（见 true-solar-time.ts 的 resolveZiweiDayOffset）。
   // 只看钟表 23 点会和经度校正后的时辰错位：东经 100° 钟表 23:30 是真太阳时 22:10 亥时，不该换日。

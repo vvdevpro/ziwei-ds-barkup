@@ -7,3 +7,12 @@ dist/
 *.tsbuildinfo
 .DS_Store
 node_modules
+
+# 部署临时产物与本地截图
+.deploy/
+.shots/
+
+# 本地环境与密钥（双保险：上面的 .env* 已覆盖，这里再点名）
+.env.local
+.env.*.local
+*.pem

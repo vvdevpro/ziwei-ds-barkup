@@ -1,0 +1,20 @@
+[Unit]
+Description=Ziwei Doushu (Next.js standalone)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/ziwei/app
+EnvironmentFile=/opt/ziwei/app.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOSTNAME=0.0.0.0
+ExecStart=/opt/node/bin/node /opt/ziwei/app/server.js
+Restart=always
+RestartSec=3
+User=root
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

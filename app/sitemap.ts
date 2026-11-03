@@ -4,12 +4,10 @@
  * 包含：
  *  - 主页、起盘页、合盘页
  *  - /library 古籍库（主页 + 3 部古籍 + 章节页）
- *  - /knowledge 知识库（主页 + 14×13 主题页）
  */
 
 import type { MetadataRoute } from 'next';
 import { ALL_BOOKS } from '@/lib/classics';
-import { getAllKnowledgeRoutes } from '@/lib/seo/knowledge';
 import { SITE_URL } from '@/lib/site';
 
 const BASE_URL = SITE_URL;
@@ -22,7 +20,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/chart`, priority: 0.95, changeFrequency: 'weekly', lastModified: lastmod },
     { url: `${BASE_URL}/heming`, priority: 0.7, changeFrequency: 'weekly', lastModified: lastmod },
     { url: `${BASE_URL}/library`, priority: 0.85, changeFrequency: 'weekly', lastModified: lastmod },
-    { url: `${BASE_URL}/knowledge`, priority: 0.9, changeFrequency: 'weekly', lastModified: lastmod },
     { url: `${BASE_URL}/terms`, priority: 0.3, changeFrequency: 'monthly', lastModified: lastmod },
     { url: `${BASE_URL}/privacy`, priority: 0.3, changeFrequency: 'monthly', lastModified: lastmod },
   ];
@@ -44,13 +41,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     return [bookHome, ...chapters];
   });
 
-  // 知识库 14×13
-  const knowledgePages: MetadataRoute.Sitemap = getAllKnowledgeRoutes().map(({ slug, topic }) => ({
-    url: `${BASE_URL}/knowledge/${slug}/${topic}`,
-    priority: 0.7,
-    changeFrequency: 'monthly',
-    lastModified: lastmod,
-  }));
-
-  return [...staticPages, ...libraryPages, ...knowledgePages];
+  return [...staticPages, ...libraryPages];
 }

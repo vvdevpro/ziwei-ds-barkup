@@ -1,7 +1,7 @@
 'use client';
 import { useState, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import BirthForm, { type BirthFormState } from '@/components/BirthForm';
+import SiteNav from '@/components/SiteNav';
 import { formToBirthInfo } from '@/lib/ziwei/share';
 import { generateChart as buildChart } from '@/lib/ziwei/algorithm';
 import type { BirthInfo, ZiweiChart } from '@/lib/ziwei/types';
@@ -48,7 +48,6 @@ function AiContent({ text, streaming }: { text: string; streaming?: boolean }) {
 }
 
 export default function HemingPage() {
-  const router = useRouter();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -64,7 +63,7 @@ export default function HemingPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [question, setQuestion] = useState('');
   const [analysisError, setAnalysisError] = useState(false);
-  // 开源版不含 /api/heming：接口 404 时单独说明，而不是让用户反复重试
+  const [analysisErrorText, setAnalysisErrorText] = useState<string | null>(null);
   const [apiMissing, setApiMissing] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const analysisRef = useRef<HTMLDivElement>(null);
@@ -93,6 +92,7 @@ export default function HemingPage() {
     setAnalyzing(true);
     setAnalysis('');
     setAnalysisError(false);
+    setAnalysisErrorText(null);
 
     try {
       // 每次按当前表单起盘，避免编辑出生信息后复用旧盘。
@@ -114,7 +114,10 @@ export default function HemingPage() {
         body: JSON.stringify({ chartA: cA, chartB: cB, question: q ?? undefined }),
       });
       if (res.status === 404) { setApiMissing(true); throw new Error('api-missing'); }
-      if (!res.ok || !res.body) throw new Error();
+      if (!res.ok || !res.body) {
+        const detail = await res.json().catch(() => null);
+        throw new Error(detail?.error || `合盘请求失败（HTTP ${res.status}）`);
+      }
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -141,8 +144,10 @@ export default function HemingPage() {
       }
       // scroll to analysis
       setTimeout(() => analysisRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-    } catch {
+    } catch (e) {
       setAnalysisError(true);
+      const message = e instanceof Error ? e.message : '';
+      setAnalysisErrorText(message && message !== 'api-missing' ? message : null);
     } finally {
       setAnalyzing(false);
     }
@@ -162,29 +167,7 @@ export default function HemingPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-0)' }}>
-      {/* 顶栏 */}
-      <header style={{
-        position: 'sticky', top: 0, zIndex: 50,
-        background: isDark ? 'rgba(2,8,16,0.88)' : 'rgba(250,245,235,0.92)',
-        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-        borderBottom: '1px solid var(--bdr)',
-        display: 'flex', alignItems: 'center', padding: '0 24px', height: '52px', gap: '16px',
-      }}>
-        <button
-          onClick={() => router.push('/')}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px',
-            color: 'var(--tx-3)', background: 'none', border: 'none', cursor: 'pointer',
-          }}
-        >
-          <span style={{ fontSize: '16px' }}>‹</span>
-          <span>返回</span>
-        </button>
-        <div style={{ width: '1px', height: '20px', background: 'var(--bdr-med)' }} />
-        <span style={{ fontSize: '12px', color: 'var(--ac)', letterSpacing: '0.2em' }}>合盘分析</span>
-        <div style={{ flex: 1 }} />
-        <span style={{ fontSize: '11px', color: 'var(--tx-3)' }}>感情 · 合伙 · 亲子 · 朋友</span>
-      </header>
+      <SiteNav />
 
       {/* 主体 */}
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px 24px 80px' }}>
@@ -286,7 +269,7 @@ export default function HemingPage() {
             <div style={{ padding: '12px 16px', borderRadius: '10px', border: '1px solid var(--bdr)', background: 'var(--bg-card)', fontSize: '13px', color: 'var(--tx-2)', marginTop: '12px' }}>
               {apiMissing
                 ? '开源版不含合盘 AI 分析接口（/api/heming），需要你自己实现后才能用。两人的命盘可以分别到「排盘」页（/chart）查看。'
-                : '分析暂时不可用，请重试。'}
+                : (analysisErrorText || '分析暂时不可用，请重试。')}
             </div>
           )}
         </div>

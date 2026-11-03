@@ -434,3 +434,30 @@ body {
    select 本身是半透明底 + 浅色字，Windows 上原生下拉列表是白底，浅灰字配白底看不清（#14） */
 [data-theme="dark"] select { color-scheme: dark; }
 [data-theme="dark"] select option { background-color: var(--bg-2); color: var(--tx-1); }
+
+/* ─── Demo 组件兼容层 ──────────────────────────────────────
+   components/ 下的 ChartBoard / PalaceCell / TimeNav / InsightPanel 等是从商业版
+   前端抽出来的，样式用的是商业版设计系统的 --t-* token 和 .card-glass 类；开源版
+   globals.css 只带了 --bg/--tx/--ac 这一套，两者没有对齐，导致 var(--t-bg)、
+   var(--t-border) 解析为空 —— 命盘宫格背景与描边全部失效，整块盘看不见。
+   这里把 --t-* 映射到现有的 --bg/--tx/--ac，并补一个 .card-glass 面板样式。 */
+:root {
+  --t-gold:       var(--ac);
+  --t-text:       var(--tx-0);
+  --t-text1:      var(--tx-1);
+  --t-text2:      var(--tx-2);
+  --t-faint:      var(--tx-3);
+  --t-bg:         var(--bg-0);
+  --t-surface:    var(--bg-1);
+  --t-card:       var(--bg-card);
+  --t-border:     var(--bdr-med);
+  --t-border-acc: var(--ac-bdr);
+}
+
+.card-glass {
+  background: var(--bg-card);
+  border: 1px solid var(--bdr-med);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--sh-sm);
+}
